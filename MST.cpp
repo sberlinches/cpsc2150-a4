@@ -1,10 +1,25 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include "UWG.h"
+#include <vector>
+#include <algorithm>
 
-void findMST(UWG*);
-UWG* parseUWGFile(const string&);
+using namespace std;
+
+struct Edges {
+    unsigned int vertex;
+    unsigned int toVertex;
+    int weight;
+};
+
+struct Graph {
+    unsigned int numberOfVertices;
+    vector<Edges>* edges = new vector<Edges>;
+};
+
+void findMST(Graph*);
+Graph* parseFile(const string&);
+bool isConnected(Graph*);
 
 /**
  * Assignment 4: Graphs - MST
@@ -19,8 +34,8 @@ int main() {
     const string filename1 = "sp7.txt";
     const string filename2 = "graph25.txt";
 
-    auto uwg = parseUWGFile(filename1);
-    findMST(uwg);
+    auto graph = parseFile(filename1);
+    findMST(graph);
 
     return 0;
 }
@@ -40,8 +55,25 @@ int main() {
  * it is running. Finally, when the minimum spanning tree has been found, the
  * program should print the edges in the tree and the total distance.
  */
-void findMST(UWG* uwg) {
-    uwg->print();
+void findMST(Graph* graph) {
+
+    auto isConnected2 = isConnected(graph);
+
+    cout << "Is graph connected: " << (isConnected2? "true": "false") << endl;
+
+
+    auto edges = graph->edges;
+
+    std::sort(begin(*edges), end(*edges), [](const Edges& a, const Edges& b) {
+        return a.weight < b.weight;
+    });
+
+    for (unsigned int i = 0; i < edges->size(); ++i)
+        cout << edges->at(i).vertex
+             << "->"
+             << edges->at(i).toVertex
+             << ":" << edges->at(i).weight
+             << endl;
 }
 
 /**
@@ -55,14 +87,14 @@ void findMST(UWG* uwg) {
  * @param filename The filename that contains the UWG
  * @return an UWG
  */
-UWG* parseUWGFile(const string& filename) {
+Graph* parseFile(const string& filename) {
 
     ifstream file(filename);
 
     if(!file)
         throw runtime_error("parseFile: File not found");
 
-    UWG* uwg;
+    auto graph = new Graph();
     string line;
     unsigned int a, b, c;
 
@@ -71,13 +103,66 @@ UWG* parseUWGFile(const string& filename) {
 
         istringstream iss(line);
 
-        // If the stream has the output (int int int)
         if (iss >> a >> b >> c)
-            uwg->insertEdge(a, b, c);
+            graph->edges->push_back({a,b,c});
         else
-            uwg = new UWG((unsigned)stoi(line));
+            graph->numberOfVertices = (unsigned)stoi(line);
     }
 
     file.close();
-    return uwg;
+    return graph;
+}
+
+/**
+ * Checks and returns whether the graph is connected or not using the union find
+ * algorithm.
+ * @param graph
+ * @return Whether the graph is connected or not
+ */
+bool isConnected(Graph* graph) {
+
+    unsigned int numberOfVertices = graph->numberOfVertices;
+    unsigned int numberOfEdges = graph->edges->size();
+    auto edges = graph->edges;
+
+    // 1. if there's more vertices than edges, definitely is not connected
+    if(numberOfVertices > numberOfEdges)
+        return false;
+
+    // 2. check if all the vertices are connected using the union-find algorithm
+    unsigned int u[numberOfEdges];
+
+    for (unsigned int i = 0; i < numberOfEdges; i++)
+        u[i] = i;
+
+    // 2.1. Iterates over the graph
+    for (unsigned int i = 0; i < numberOfEdges; i++) {
+
+        unsigned int prevVal = u[edges->at(i).vertex];
+
+        // DEBUG
+        cout << edges->at(i).vertex << "->" << edges->at(i).toVertex << " = ";
+        for (unsigned int j = 0; j < numberOfEdges; j++)
+            cout << u[j];
+        cout << "->";
+
+        // 2.1.1. Changes all the elements with the same value
+        for (unsigned int j = 0; j < numberOfEdges; j++)
+            if(u[j] == prevVal)
+                u[j] = u[edges->at(i).toVertex];
+
+
+        // DEBUG
+        for (unsigned int j = 0; j < numberOfEdges; j++)
+            cout << u[j];
+        cout << endl;
+    }
+
+    // 3. Compares that all the values are the same
+    unsigned int firstVal = u[0];
+    for (unsigned int i = 1; i < numberOfEdges; i++)
+        if(u[i] != firstVal)
+            return false;
+
+    return true;
 }
