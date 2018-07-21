@@ -130,9 +130,9 @@ bool isConnected(Graph* graph) {
         return false;
 
     // 2. check if all the vertices are connected using the union-find algorithm
-    unsigned int u[numberOfEdges];
+    unsigned int u[numberOfVertices];
 
-    for (unsigned int i = 0; i < numberOfEdges; i++)
+    for (unsigned int i = 0; i < numberOfVertices; i++)
         u[i] = i;
 
     // 2.1. Iterates over the graph
@@ -142,25 +142,25 @@ bool isConnected(Graph* graph) {
 
         // DEBUG
         cout << edges->at(i).vertex << "->" << edges->at(i).toVertex << " = ";
-        for (unsigned int j = 0; j < numberOfEdges; j++)
+        for (unsigned int j = 0; j < numberOfVertices; j++)
             cout << u[j];
         cout << "->";
 
         // 2.1.1. Changes all the elements with the same value
-        for (unsigned int j = 0; j < numberOfEdges; j++)
+        for (unsigned int j = 0; j < numberOfVertices; j++)
             if(u[j] == prevVal)
                 u[j] = u[edges->at(i).toVertex];
 
 
         // DEBUG
-        for (unsigned int j = 0; j < numberOfEdges; j++)
+        for (unsigned int j = 0; j < numberOfVertices; j++)
             cout << u[j];
         cout << endl;
     }
 
     // 3. Compares that all the values are the same
     unsigned int firstVal = u[0];
-    for (unsigned int i = 1; i < numberOfEdges; i++)
+    for (unsigned int i = 1; i < numberOfVertices; i++)
         if(u[i] != firstVal)
             return false;
 
