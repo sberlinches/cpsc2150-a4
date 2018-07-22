@@ -57,23 +57,62 @@ int main() {
  */
 void findMST(Graph* graph) {
 
-    auto isConnected2 = isConnected(graph);
-
-    cout << "Is graph connected: " << (isConnected2? "true": "false") << endl;
-
+    // 1. Checks if the graph is connected
+    if(!isConnected(graph)) {
+        cout << "Graph not connected. No possible spanning tree";
+        return;
+    }
 
     auto edges = graph->edges;
+    unsigned int numberOfVertices = graph->numberOfVertices;
+    unsigned int numberOfEdges = edges->size();
+    int totalDistance = 0;
 
+    // 2. Sort the graph by weight
     std::sort(begin(*edges), end(*edges), [](const Edges& a, const Edges& b) {
-        return a.weight < b.weight;
+        return a.weight > b.weight;
     });
 
-    for (unsigned int i = 0; i < edges->size(); ++i)
-        cout << edges->at(i).vertex
+    // 3. Tries to removing all the edges starting with the ones with the
+    // most weight and checks whether the graph is still connected or not.
+    // If is not connected restores the deleted edge and tries the following.
+    for (unsigned int i = 0, j = 0; i < numberOfEdges; i++, j++) {
+
+        // 3.1. If the graph has reach the minimum of edges just stop
+        // minimum number of edges = vertices-1
+        if(numberOfVertices-1 == edges->size())
+            break;
+
+        //cout << "Iteration:" << i << "/" << edges->size() << " Element:" << j << endl;
+
+        // 3.2. Stores the vertex temporarily and deletes form the graph
+        auto tmp = edges->at(j);
+        edges->erase(edges->begin()+j);
+
+        // 3.3. If after the deletion the graph is not connected, insert it back.
+        // If is connected jumps to try the next vertex.
+        if (!isConnected(graph)) {
+            //cout << "Tried to remove: " << tmp.vertex << "->" << tmp.toVertex << ":" << tmp.weight << endl;
+            edges->insert(edges->begin()+j, tmp);
+        } else {
+            cout << "Removed: " << tmp.vertex << "->" << tmp.toVertex << ":" << tmp.weight << endl;
+            j--;
+        }
+    }
+
+    // 4. Prints the minimum spanning tree and the total distance
+    for (unsigned int k = 0; k < edges->size(); ++k) {
+
+        totalDistance += edges->at(k).weight;
+
+        cout << edges->at(k).vertex
              << "->"
-             << edges->at(i).toVertex
-             << ":" << edges->at(i).weight
+             << edges->at(k).toVertex
+             << ":" << edges->at(k).weight
              << endl;
+    }
+
+    cout << "Total distance: " << totalDistance << endl;
 }
 
 /**
@@ -121,12 +160,13 @@ Graph* parseFile(const string& filename) {
  */
 bool isConnected(Graph* graph) {
 
-    unsigned int numberOfVertices = graph->numberOfVertices;
-    unsigned int numberOfEdges = graph->edges->size();
     auto edges = graph->edges;
+    unsigned int numberOfVertices = graph->numberOfVertices;
+    unsigned int numberOfEdges = edges->size();
 
     // 1. if there's more vertices than edges, definitely is not connected
-    if(numberOfVertices > numberOfEdges)
+    // minimum number of edges = vertices-1
+    if(numberOfVertices-1 > numberOfEdges)
         return false;
 
     // 2. check if all the vertices are connected using the union-find algorithm
@@ -141,10 +181,10 @@ bool isConnected(Graph* graph) {
         unsigned int prevVal = u[edges->at(i).vertex];
 
         // DEBUG
-        cout << edges->at(i).vertex << "->" << edges->at(i).toVertex << " = ";
+        /*cout << edges->at(i).vertex << "->" << edges->at(i).toVertex << " = ";
         for (unsigned int j = 0; j < numberOfVertices; j++)
             cout << u[j];
-        cout << "->";
+        cout << "->";*/
 
         // 2.1.1. Changes all the elements with the same value
         for (unsigned int j = 0; j < numberOfVertices; j++)
@@ -153,9 +193,9 @@ bool isConnected(Graph* graph) {
 
 
         // DEBUG
-        for (unsigned int j = 0; j < numberOfVertices; j++)
+        /*for (unsigned int j = 0; j < numberOfVertices; j++)
             cout << u[j];
-        cout << endl;
+        cout << endl;*/
     }
 
     // 3. Compares that all the values are the same
