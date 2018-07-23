@@ -34,13 +34,17 @@ int main() {
     const string filename1 = "sp7.txt";
     const string filename2 = "graph25.txt";
 
-    auto graph = parseFile(filename1);
+    auto graph = parseFile(filename2);
     findMST(graph);
 
     return 0;
 }
 
 /**
+ * Finds the minimum spanning tree from a given undirected weighted graph.
+ * Time complexity: O(n^3)
+ * Space complexity: O(1)
+ *
  * To find the minimum spanning tree of a graph, remove the edges which are not
  * necessary. The edges chosen for removal should be the edges of maximum weight
  * among those that can break any cycle in the tree. This algorithm somewhat
@@ -68,14 +72,14 @@ void findMST(Graph* graph) {
     unsigned int numberOfEdges = edges->size();
     int totalDistance = 0;
 
-    // 2. Sort the graph by weight
-    std::sort(begin(*edges), end(*edges), [](const Edges& a, const Edges& b) {
+    // 2. Sort the graph by weight. O(E log E)
+    sort(edges->begin(), edges->end(), [](const Edges& a, const Edges& b) {
         return a.weight > b.weight;
     });
 
-    // 3. Tries to removing all the edges starting with the ones with the
-    // most weight and checks whether the graph is still connected or not.
-    // If is not connected restores the deleted edge and tries the following.
+    // 3. Tries to removing all the edges starting with the ones with the most
+    // weight and checks whether the graph is still connected or not. If is not
+    // connected restores the deleted edge and tries the following.
     for (unsigned int i = 0, j = 0; i < numberOfEdges; i++, j++) {
 
         // 3.1. If the graph has reach the minimum of edges just stop
@@ -117,6 +121,7 @@ void findMST(Graph* graph) {
 
 /**
  * Reads a file, parses it and returns an undirected weighted graph (UWG).
+ * Time complexity: O(n)
  * File format:
  * #nodes
  * origin destination weight
@@ -155,6 +160,8 @@ Graph* parseFile(const string& filename) {
 /**
  * Checks and returns whether the graph is connected or not using the union find
  * algorithm.
+ * Time complexity: O(n^2)
+ *
  * @param graph
  * @return Whether the graph is connected or not
  */
